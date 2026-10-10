@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" role="img" aria-label="ImmoFilms.ch">
+  <defs>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7a5a24"/>
+      <stop offset=".22" stop-color="#e9d08f"/>
+      <stop offset=".42" stop-color="#b8913f"/>
+      <stop offset=".58" stop-color="#fff1c4"/>
+      <stop offset=".78" stop-color="#c9a45c"/>
+      <stop offset="1" stop-color="#6f5020"/>
+    </linearGradient>
+    <linearGradient id="gText" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8a6a2c"/>
+      <stop offset=".35" stop-color="#e9d18f"/>
+      <stop offset=".65" stop-color="#fff1c6"/>
+      <stop offset="1" stop-color="#a07c35"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8 8)" fill="none" stroke="url(#gGold)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 31 L32 8.5 L58 31"/>
+    <path d="M13.5 25 V55.5 H50.5 V25"/>
+    <path d="M44 19.5 V12 H49 V23.8"/>
+    <circle cx="32" cy="40" r="9.5" stroke-width="1.7"/>
+    <path d="M29.2 35.2 L37.8 40 L29.2 44.8 Z" fill="url(#gGold)" stroke="none"/>
+  </g>
+  <text x="88" y="46" font-family="Cormorant Garamond, Georgia, serif" font-size="34" font-weight="500" letter-spacing="4.5" fill="#f6f3ec">IMMO<tspan fill="url(#gText)">FILMS</tspan><tspan font-family="Manrope, Arial, sans-serif" font-size="12" letter-spacing="1.5" fill="#a9a59b">.ch</tspan></text>
+  <text x="89" y="64" font-family="Manrope, Arial, sans-serif" font-size="8.5" font-weight="600" letter-spacing="3.6" fill="#76736c">VIDÉOS IMMOBILIÈRES PREMIUM</text>
+</svg>
