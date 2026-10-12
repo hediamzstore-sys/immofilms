@@ -42,6 +42,8 @@ async function bootstrap(): Promise<void> {
         },
       },
       crossOriginEmbedderPolicy: false,
+      // Autorise l'affichage des images du site ailleurs (signature email, webmail, réseaux sociaux).
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
   app.use(compression());
