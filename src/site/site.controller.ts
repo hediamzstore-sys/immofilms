@@ -12,11 +12,17 @@ import { SkipThrottle } from '@nestjs/throttler';
 export class SiteController {
   constructor(private readonly config: ConfigService) {}
 
+  /** Ignore les anciennes valeurs d'exemple encore présentes dans hPanel. */
+  private value(key: string, fallback: string, placeholders: string[] = []): string {
+    const v = (this.config.get<string>(key) ?? '').trim();
+    return v && !placeholders.includes(v) ? v : fallback;
+  }
+
   @Get('config')
   getPublicConfig() {
     return {
-      whatsapp: this.config.get<string>('WHATSAPP_NUMBER', '41790000000'),
-      whatsappDisplay: this.config.get<string>('WHATSAPP_DISPLAY', '+41 79 000 00 00'),
+      whatsapp: this.value('WHATSAPP_NUMBER', '41795075556', ['41790000000']),
+      whatsappDisplay: this.value('WHATSAPP_DISPLAY', '+41 79 507 55 56', ['+41 79 000 00 00']),
       email: this.config.get<string>('CONTACT_EMAIL', 'contact@immofilms.ch'),
       waMessage: this.config.get<string>(
         'WHATSAPP_MESSAGE',
