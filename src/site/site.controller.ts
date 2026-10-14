@@ -1,6 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SkipThrottle } from '@nestjs/throttler';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
+import { MailService } from '../contact/mail.service';
 
 /**
  * Données publiques lues par le site au chargement.
@@ -10,7 +13,10 @@ import { SkipThrottle } from '@nestjs/throttler';
 @SkipThrottle()
 @Controller()
 export class SiteController {
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly mail: MailService,
+  ) {}
 
   /** Ignore les anciennes valeurs d'exemple encore présentes dans hPanel. */
   private value(key: string, fallback: string, placeholders: string[] = []): string {
@@ -32,7 +38,20 @@ export class SiteController {
   }
 
   @Get('health')
-  health() {
-    return { status: 'ok', uptime: Math.round(process.uptime()) };
+  async health() {
+    let demandesRecues = 0;
+    try {
+      const raw = await readFile(join(process.cwd(), 'data', 'leads.jsonl'), 'utf8');
+      demandesRecues = raw.split('\n').filter(Boolean).length;
+    } catch {
+      /* aucun fichier = aucune demande */
+    }
+    return {
+      status: 'ok',
+      uptime: Math.round(process.uptime()),
+      version: '2026-10-14',
+      email: this.mail.status(),
+      demandesRecues,
+    };
   }
 }

@@ -12,32 +12,104 @@ const HTML_ENTITIES: Record<string, string> = {
 };
 const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => HTML_ENTITIES[c] ?? c);
 
+export type MailState = 'non-configure' | 'verification' | 'pret' | 'erreur';
+
+/** Nettoie une variable saisie dans hPanel (espaces, guillemets autour). */
+const clean = (v: unknown): string => {
+  let s = String(v ?? '').trim();
+  if (s.length >= 2 && ((s[0] === '"' && s.endsWith('"')) || (s[0] === "'" && s.endsWith("'")))) {
+    s = s.slice(1, -1);
+  }
+  return s;
+};
+
+const mask = (email: string): string =>
+  email.replace(/^(.)([^@]*)(@.*)$/, (_m, a: string, b: string, c: string) => a + '*'.repeat(Math.min(b.length, 6)) + c);
+
 @Injectable()
 export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name);
   private transporter?: Transporter;
+  private state: MailState = 'non-configure';
+  private lastError = '';
+  private lastSuccessAt = '';
+  private active = { host: '', port: 0, secure: false, user: '' };
 
   constructor(private readonly config: ConfigService) {}
 
   onModuleInit(): void {
-    const host = this.config.get<string>('SMTP_HOST');
-    const user = this.config.get<string>('SMTP_USER');
-    const pass = this.config.get<string>('SMTP_PASS');
-    if (!host || !user || !pass) {
-      this.logger.warn('SMTP non configuré (SMTP_HOST / SMTP_USER / SMTP_PASS).');
-      return;
-    }
-    const port = Number(this.config.get('SMTP_PORT', 465));
-    this.transporter = createTransport({
+    void this.setup();
+  }
+
+  /** État de l'envoi d'emails, sans aucun secret, pour /api/health. */
+  status() {
+    const missing = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'].filter((k) => !clean(this.config.get(k)));
+    return {
+      etat: this.state,
+      variablesManquantes: missing,
+      serveur: this.active.host ? `${this.active.host}:${this.active.port}${this.active.secure ? ' (SSL)' : ' (STARTTLS)'}` : null,
+      compte: this.active.user ? mask(this.active.user) : null,
+      destinataire: mask(this.recipient()),
+      derniereErreur: this.lastError || null,
+      dernierEnvoiReussi: this.lastSuccessAt || null,
+    };
+  }
+
+  private recipient(): string {
+    return clean(this.config.get('MAIL_TO')) || clean(this.config.get('CONTACT_EMAIL')) || clean(this.config.get('SMTP_USER'));
+  }
+
+  private build(host: string, port: number, secure: boolean, user: string, pass: string): Transporter {
+    return createTransport({
       host,
       port,
-      secure: String(this.config.get('SMTP_SECURE', port === 465)) === 'true',
+      secure,
       auth: { user, pass },
+      connectionTimeout: 15_000,
+      greetingTimeout: 15_000,
+      socketTimeout: 20_000,
     });
-    this.transporter
-      .verify()
-      .then(() => this.logger.log(`SMTP prêt (${host}:${port})`))
-      .catch((e: Error) => this.logger.error(`Connexion SMTP impossible : ${e.message}`));
+  }
+
+  private async setup(): Promise<void> {
+    const host = clean(this.config.get('SMTP_HOST')) || 'smtp.hostinger.com';
+    const user = clean(this.config.get('SMTP_USER'));
+    const pass = clean(this.config.get('SMTP_PASS'));
+    if (!user || !pass) {
+      this.state = 'non-configure';
+      this.logger.warn('SMTP non configuré (SMTP_USER / SMTP_PASS manquant).');
+      return;
+    }
+    const port = Number(clean(this.config.get('SMTP_PORT')) || 465);
+    const secureRaw = clean(this.config.get('SMTP_SECURE')).toLowerCase();
+    const secure = secureRaw ? secureRaw === 'true' : port === 465;
+
+    // Essai avec la configuration demandée, puis repli automatique 465 SSL <-> 587 STARTTLS.
+    const attempts: Array<[number, boolean]> = [[port, secure]];
+    if (!(port === 465 && secure)) attempts.push([465, true]);
+    if (!(port === 587 && !secure)) attempts.push([587, false]);
+
+    this.state = 'verification';
+    for (const [p, s] of attempts) {
+      const t = this.build(host, p, s, user, pass);
+      try {
+        await t.verify();
+        this.transporter = t;
+        this.active = { host, port: p, secure: s, user };
+        this.state = 'pret';
+        this.lastError = '';
+        this.logger.log(`SMTP prêt (${host}:${p}, ${s ? 'SSL' : 'STARTTLS'})`);
+        return;
+      } catch (e) {
+        const msg = (e as Error).message;
+        this.lastError = `${host}:${p} → ${msg}`;
+        this.logger.error(`Connexion SMTP impossible (${host}:${p}) : ${msg}`);
+        // Identifiants refusés : inutile d'essayer un autre port.
+        if (/auth|535|credentials|password|login/i.test(msg)) break;
+      }
+    }
+    this.state = 'erreur';
+    this.active = { host, port, secure, user };
   }
 
   isConfigured(): boolean {
@@ -46,9 +118,9 @@ export class MailService implements OnModuleInit {
 
   async sendLead(lead: Lead): Promise<void> {
     if (!this.transporter) return;
-    const user = this.config.get<string>('SMTP_USER')!;
-    const from = this.config.get<string>('MAIL_FROM') || user;
-    const to = this.config.get<string>('MAIL_TO') || this.config.get<string>('CONTACT_EMAIL') || user;
+    const user = this.active.user;
+    const from = clean(this.config.get('MAIL_FROM')) || `ImmoFilms.ch <${user}>`;
+    const to = this.recipient();
 
     const rows: [string, string][] = [
       ['Nom', lead.nom],
@@ -83,13 +155,21 @@ export class MailService implements OnModuleInit {
   </div>
 </div>`;
 
-    await this.transporter.sendMail({
-      from,
-      to,
-      replyTo: `${lead.nom} <${lead.email}>`,
-      subject: `Démo gratuite — ${lead.nom}${lead.formule ? ` (${lead.formule})` : ''}`,
-      text,
-      html,
-    });
+    try {
+      await this.transporter.sendMail({
+        from,
+        to,
+        replyTo: `${lead.nom} <${lead.email}>`,
+        subject: `Démo gratuite — ${lead.nom}${lead.formule ? ` (${lead.formule})` : ''}`,
+        text,
+        html,
+      });
+      this.lastSuccessAt = new Date().toISOString();
+      this.lastError = '';
+    } catch (e) {
+      this.lastError = `envoi → ${(e as Error).message}`;
+      this.state = 'erreur';
+      throw e;
+    }
   }
 }
