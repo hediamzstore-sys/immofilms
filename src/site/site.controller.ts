@@ -50,7 +50,7 @@ export class SiteController {
     return {
       status: 'ok',
       uptime: Math.round(process.uptime()),
-      version: '2026-10-14b',
+      version: '2026-10-14c',
       configuration: {
         fichiersEnvTrouves: ENV_FILES_FOUND.length,
         variablesSystemeSmtp: ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_TO'].filter((k) => !!process.env[k]).length,
