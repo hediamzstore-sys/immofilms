@@ -4,6 +4,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { MailService } from '../contact/mail.service';
+import { ENV_FILES_FOUND } from '../config/env-files';
 
 /**
  * Données publiques lues par le site au chargement.
@@ -49,7 +50,12 @@ export class SiteController {
     return {
       status: 'ok',
       uptime: Math.round(process.uptime()),
-      version: '2026-10-14',
+      version: '2026-10-14b',
+      configuration: {
+        fichiersEnvTrouves: ENV_FILES_FOUND.length,
+        variablesSystemeSmtp: ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'MAIL_TO'].filter((k) => !!process.env[k]).length,
+        variablesSystemeTotal: Object.keys(process.env).length,
+      },
       email: this.mail.status(),
       demandesRecues,
     };
