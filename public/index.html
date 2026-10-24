@@ -324,9 +324,10 @@ em.gold-text{font-style:italic}
 .platforms:hover .marquee{animation-play-state:paused}
 .clients{padding:34px 0}
 .clients[hidden]{display:none}
-.client-logo{display:flex;align-items:center;justify-content:center;height:64px;padding:10px 22px;border-radius:12px;background:#f6f3ec;border:1px solid var(--line-2)}
-.client-logo img{height:44px;width:auto;max-width:170px;object-fit:contain;filter:grayscale(1);opacity:.85;transition:filter .4s,opacity .4s}
-.client-logo:hover img{filter:none;opacity:1}
+.client-logo{display:flex;align-items:center;border-radius:12px;overflow:hidden;border:1px solid var(--line-2);opacity:.88;transition:opacity .4s,border-color .4s}
+.client-logo:hover{opacity:1;border-color:var(--gold)}
+.client-logo img{display:block;height:84px;width:auto;max-width:220px;object-fit:contain}
+@media (max-width:640px){.client-logo img{height:64px}}
 .marquee-group{display:flex;align-items:center;gap:64px;padding-right:64px}
 .marquee-item{display:flex;align-items:center;gap:64px;font-family:var(--serif);font-size:clamp(1.4rem,2.4vw,2rem);color:rgba(246,243,236,.55);white-space:nowrap;letter-spacing:.02em}
 .marquee-item::after{content:"✦";font-size:.7rem;color:var(--gold)}
