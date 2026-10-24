@@ -1,8 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SkipThrottle } from '@nestjs/throttler';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { existsSync } from 'fs';
+import { readdir, readFile } from 'fs/promises';
+import { extname, join } from 'path';
 import { MailService } from '../contact/mail.service';
 import { ENV_FILES_FOUND } from '../config/env-files';
 
@@ -36,6 +37,23 @@ export class SiteController {
         'Bonjour ImmoFilms, je souhaite recevoir une démo gratuite pour une de nos annonces.',
       ),
     };
+  }
+
+  /**
+   * Logos des agences clientes affichés en bandeau sur le site.
+   * Il suffit de déposer les fichiers dans public/assets/clients/.
+   */
+  @Get('clients')
+  async clients() {
+    const dir = [join(__dirname, '..', 'public'), join(__dirname, '..', '..', 'public')]
+      .map((d) => join(d, 'assets', 'clients'))
+      .find((d) => existsSync(d));
+    if (!dir) return [];
+    const files = (await readdir(dir)).filter((f) => /^[^.].*\.(png|jpe?g|svg|webp)$/i.test(f)).sort();
+    return files.map((f) => ({
+      src: `/assets/clients/${encodeURIComponent(f)}`,
+      name: f.slice(0, -extname(f).length).replace(/[-_]+/g, ' ').replace(/^\w/, (ch) => ch.toUpperCase()),
+    }));
   }
 
   @Get('health')

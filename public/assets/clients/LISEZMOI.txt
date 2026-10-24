@@ -1,0 +1,7 @@
+Logos des agences clientes (bandeau « Ils nous font confiance »)
+
+- Déposez ici le logo de chaque agence cliente : PNG, JPG, SVG ou WEBP.
+- Uniquement les vraies agences clientes, avec leur accord écrit.
+- Le nom du fichier devient le nom affiché pour l'accessibilité :
+  ex. regie-du-lac.png -> « Regie du lac ».
+- Tant que ce dossier ne contient aucun logo, le bandeau reste invisible.

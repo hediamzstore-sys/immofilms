@@ -322,6 +322,11 @@ em.gold-text{font-style:italic}
 .platforms::after{right:0;background:linear-gradient(-90deg,var(--ink),transparent)}
 .marquee{display:flex;width:max-content;animation:marquee 38s linear infinite}
 .platforms:hover .marquee{animation-play-state:paused}
+.clients{padding:34px 0}
+.clients[hidden]{display:none}
+.client-logo{display:flex;align-items:center;justify-content:center;height:64px;padding:10px 22px;border-radius:12px;background:#f6f3ec;border:1px solid var(--line-2)}
+.client-logo img{height:44px;width:auto;max-width:170px;object-fit:contain;filter:grayscale(1);opacity:.85;transition:filter .4s,opacity .4s}
+.client-logo:hover img{filter:none;opacity:1}
 .marquee-group{display:flex;align-items:center;gap:64px;padding-right:64px}
 .marquee-item{display:flex;align-items:center;gap:64px;font-family:var(--serif);font-size:clamp(1.4rem,2.4vw,2rem);color:rgba(246,243,236,.55);white-space:nowrap;letter-spacing:.02em}
 .marquee-item::after{content:"✦";font-size:.7rem;color:var(--gold)}
@@ -1128,6 +1133,16 @@ a.c-line:hover{border-color:rgba(201,164,92,.45);transform:translateX(6px);backg
   </div>
 </section>
 
+<!-- ================= AGENCES CLIENTES =================
+  Le bandeau reste invisible tant qu'il n'y a aucun logo.
+  Pour ajouter une agence : déposez son logo (PNG, JPG, SVG ou WEBP)
+  dans public/assets/clients/ — uniquement avec son accord écrit.
+  Le nom du fichier sert de texte alternatif (ex. regie-du-lac.png).
+-->
+<div class="platforms clients" id="clients" aria-label="Agences qui nous font confiance" hidden>
+  <div class="marquee" id="clientsMarquee"></div>
+</div>
+
 <!-- ================= ENGAGEMENTS =================
   Remplacez cette section par de vrais témoignages clients
   (avec leur accord écrit) dès que vous en aurez.
@@ -1617,6 +1632,35 @@ const CONFIG = {
     frame.classList.remove('f916','f11');
     if (b.dataset.fmt !== 'f169') frame.classList.add(b.dataset.fmt);
   }));
+
+  /* ---------- Logos des agences clientes ---------- */
+  fetch('/api/clients', {headers:{Accept:'application/json'}})
+    .then(r => r.ok ? r.json() : [])
+    .then(list => {
+      if (!Array.isArray(list) || !list.length) return;
+      const wrap = $('#clients'), track = $('#clientsMarquee');
+      let items = list.slice();
+      while (items.length < 8) items = items.concat(list); // bandeau assez long pour défiler sans trou
+      const group = hidden => {
+        const g = document.createElement('div');
+        g.className = 'marquee-group';
+        if (hidden) g.setAttribute('aria-hidden', 'true');
+        const label = document.createElement('span');
+        label.className = 'marquee-label'; label.textContent = 'Ils nous font confiance';
+        g.appendChild(label);
+        items.forEach((c, i) => {
+          const box = document.createElement('span'); box.className = 'client-logo';
+          const img = document.createElement('img');
+          img.src = c.src; img.loading = 'lazy'; img.decoding = 'async';
+          img.alt = (hidden || i >= list.length) ? '' : c.name;
+          box.appendChild(img); g.appendChild(box);
+        });
+        return g;
+      };
+      track.append(group(false), group(true));
+      wrap.hidden = false;
+    })
+    .catch(() => {});
 
   /* ---------- Formulaire de contact ---------- */
   const form = $('#contactForm'), success = $('#formSuccess');
