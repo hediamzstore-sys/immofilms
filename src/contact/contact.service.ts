@@ -43,6 +43,7 @@ export class ContactService {
 
     // 2) Notification par email.
     let mailed = false;
+    await this.mail.ensureReady();
     if (this.mail.isConfigured()) {
       try {
         await this.mail.sendLead(lead);

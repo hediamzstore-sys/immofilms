@@ -34,11 +34,27 @@ export class MailService implements OnModuleInit {
   private lastError = '';
   private lastSuccessAt = '';
   private active = { host: '', port: 0, secure: false, user: '' };
+  private setupPromise?: Promise<void>;
 
   constructor(private readonly config: ConfigService) {}
 
   onModuleInit(): void {
-    void this.setup();
+    this.setupPromise = this.setup();
+  }
+
+  /**
+   * Hostinger met l'application en veille quand le site n'a pas de visite :
+   * l'envoi du formulaire peut alors réveiller l'application avant que la
+   * connexion SMTP soit prête. On attend donc la fin de la vérification, et
+   * on retente une fois si elle avait échoué.
+   */
+  async ensureReady(): Promise<void> {
+    if (this.transporter) return;
+    if (this.setupPromise) await this.setupPromise;
+    if (!this.transporter && this.state !== 'non-configure') {
+      this.setupPromise = this.setup();
+      await this.setupPromise;
+    }
   }
 
   /** État de l'envoi d'emails, sans aucun secret, pour /api/health. */
