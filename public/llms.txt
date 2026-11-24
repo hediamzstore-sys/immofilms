@@ -1,0 +1,19 @@
+# ImmoFilms.ch
+
+> ImmoFilms.ch transforme les photos d'annonces immobilières en vidéos premium (Instagram Reels, Facebook, Homegate, ImmoScout24, YouTube) pour les agences de Genève, du canton de Vaud et de la France voisine (Haute-Savoie, Pays de Gex). Aucune prise de vue nécessaire, livraison en 48 h.
+
+- Basé à Genève, Suisse. Contact : contact@immofilms.ch, +41 79 507 55 56 (WhatsApp).
+- Tarifs : Vidéo Express 250 CHF, Vidéo Premium 390 CHF, Pack Agence 990 CHF / mois.
+- Démo gratuite sur une annonce de l'agence, sans engagement.
+
+## Pages principales
+
+- [Accueil](https://immofilms.ch/): présentation, processus, portfolio, tarifs et FAQ
+- [Vidéo immobilière à Genève](https://immofilms.ch/video-immobiliere-geneve.html): offre pour les agences genevoises
+- [Vidéo immobilière à Lausanne et Vaud](https://immofilms.ch/video-immobiliere-lausanne-vaud.html): offre pour les agences vaudoises
+- [Vidéo immobilière en France voisine](https://immofilms.ch/video-immobiliere-france-voisine.html): Haute-Savoie et Pays de Gex
+
+## Informations légales
+
+- [Mentions légales](https://immofilms.ch/mentions-legales.html)
+- [Politique de confidentialité](https://immofilms.ch/confidentialite.html)
